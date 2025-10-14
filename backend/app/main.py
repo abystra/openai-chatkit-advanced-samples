@@ -16,7 +16,6 @@ app = FastAPI(title="ChatKit API")
 
 _chatkit_server: FactAssistantServer | None = create_chatkit_server()
 
-
 def get_chatkit_server() -> FactAssistantServer:
     if _chatkit_server is None:
         raise HTTPException(

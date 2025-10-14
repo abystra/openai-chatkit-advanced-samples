@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+import os
 import inspect
 import logging
 from datetime import datetime
 from typing import Annotated, Any, AsyncIterator, Final, Literal
 from uuid import uuid4
 
-from agents import Agent, RunContextWrapper, Runner, function_tool
+from agents import RunContextWrapper,  function_tool
 from chatkit.agents import (
     AgentContext,
     ClientToolCall,
@@ -39,12 +40,27 @@ from .weather import (
 from .weather import (
     normalize_unit as normalize_temperature_unit,
 )
-
+from agents import (
+    Agent,
+    Model,
+    ModelProvider,
+    OpenAIChatCompletionsModel,
+    RunConfig,
+    Runner,
+    set_tracing_disabled,
+)
+from openai import AsyncOpenAI
 # If you want to check what's going on under the hood, set this to DEBUG
 logging.basicConfig(level=logging.INFO)
 
 SUPPORTED_COLOR_SCHEMES: Final[frozenset[str]] = frozenset({"light", "dark"})
 CLIENT_THEME_TOOL_NAME: Final[str] = "switch_theme"
+client = AsyncOpenAI(base_url="https://openrouter.ai/api/v1", api_key=os.getenv("OPENAI_API_KEY"))
+set_tracing_disabled(disabled=True)
+
+class OpenRouterModelProvider(ModelProvider):
+    def get_model(self, model_name: str | None) -> Model:
+        return OpenAIChatCompletionsModel("openai/gpt-4o", openai_client=client)
 
 
 def _normalize_color_scheme(value: str) -> str:
@@ -258,6 +274,7 @@ class FactAssistantServer(ChatKitServer[dict[str, Any]]):
         result = Runner.run_streamed(
             self.assistant,
             agent_input,
+            run_config=RunConfig(model_provider=OpenRouterModelProvider()),
             context=agent_context,
         )
 
