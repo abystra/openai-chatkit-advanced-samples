@@ -9,11 +9,8 @@ from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.responses import Response, StreamingResponse
 from starlette.responses import JSONResponse
 
-from .chat import (
-    FactAssistantServer,
-    create_chatkit_server,
-)
-from .facts import fact_store
+from backend.app.chat import FactAssistantServer, create_chatkit_server
+from backend.app.facts import fact_store
 
 app = FastAPI(title="ChatKit API")
 
@@ -70,3 +67,10 @@ async def discard_fact(fact_id: str) -> dict[str, Any]:
 @app.get("/health")
 async def health_check() -> dict[str, str]:
     return {"status": "healthy"}
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
+
